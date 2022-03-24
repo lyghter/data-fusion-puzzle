@@ -1,0 +1,11 @@
+jupyterlab==3.0
+ipywidgets
+seaborn
+pandas 
+pyarrow
+scipy 
+scikit-learn
+pytorch-metric-learning
+pytorch_lightning
+transformers
+sentencepiece
