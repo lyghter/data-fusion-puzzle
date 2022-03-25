@@ -17,6 +17,7 @@ class Estimator(IO):
     def __init__(s,a):
         s.a = a
         s.data_dir = a.data_dir
+        s.data_dir.mkdir(exist_ok=True)
         s.prepare_data()
         s.load_encoders()
         s.load_tensors()
@@ -58,9 +59,14 @@ class Estimator(IO):
      
         
     def run_or_pass(s, Class, files):
+        t0 = time.time()
         if not files.issubset(s.data_files):  
-            Class(a).run()
-
+            Class(s.a).run()
+        t1 = time.time()
+        print('-'*20)
+        print(t1-t0)
+        print('-'*20)
+        
         
     def load_encoders(s):          
         for name in ['event','uid']:
