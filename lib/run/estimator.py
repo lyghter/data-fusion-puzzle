@@ -70,7 +70,7 @@ class Estimator(IO):
         
     def load_encoders(s):          
         for name in ['event','uid']:
-            e = Encoder(s.data_dir,name)
+            e = Encoder(Path('json'),name)
             e.load()
             setattr(s, name+'_encoder', e)    
             

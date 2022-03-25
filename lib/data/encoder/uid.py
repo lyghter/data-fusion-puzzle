@@ -26,7 +26,7 @@ class UidEncoder(IO):
         tr = s.tr[c].unique().tolist()
         cl = s.cl[c].unique().tolist()
         vocab = sorted(set(tr+cl))
-        s.encoder = Encoder(s.data_dir,'uid')
+        s.encoder = Encoder(Path('json'),'uid')
         s.encoder.fit(vocab)
         s.tr[c] = s.encoder.transform(s.tr[c])
         s.cl[c] = s.encoder.transform(s.cl[c])

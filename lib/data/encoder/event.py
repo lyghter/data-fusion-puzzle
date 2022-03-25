@@ -37,7 +37,7 @@ class EventEncoder(IO):
             rtk_vocab + 
             bank_vocab
         )
-        s.encoder = Encoder(s.data_dir,'event')
+        s.encoder = Encoder(Path('json'),'event')
         s.encoder.fit(vocab)
         s.bank['MCC'] = s.encoder.transform(
             s.bank['MCC']) 
