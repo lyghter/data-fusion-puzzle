@@ -39,7 +39,7 @@ ENV USER env
 COPY requirements.txt .
 RUN pip install -r requirements.txt --index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
-RUN apt install git-lfs
+RUN apt update && apt install git-lfs
 RUN git lfs install
 
 WORKDIR /notebooks
