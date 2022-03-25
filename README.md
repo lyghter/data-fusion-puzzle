@@ -21,8 +21,6 @@
 
 Необходимые пакеты можно установить через pip:
 ```
-apt install git-lfs
-git lfs install
 git clone https://github.com/lyghter/data-fusion-puzzle
 cd data-fusion-puzzle
 pip install -r env/requirements.txt
