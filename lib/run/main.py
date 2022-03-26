@@ -4,7 +4,7 @@
 
 from ..base import *
 from ..data.splitter.sequential2 import Sequential2Splitter
-
+from ..data.datamodule.test2 import Test2
 
 
 def _main():
@@ -84,11 +84,84 @@ def _main():
         a.update()
         a.bank_len = XT.shape[1]
         a.rtk_len = XC.shape[1] 
+        
+        bank = sorted(
+            tr.user_id.unique().tolist())
+        rtk = sorted(
+            cl.user_id.unique().tolist())   
+        max_len = max(len(bank),len(rtk))
+        df = pd.DataFrame(index=range(max_len))
+        df['bank'] = bank
+        df['rtk'] = rtk
+        df = df.fillna(-1)
+        
+        def collate(DD):
+            AB = [A+B for A in 'XY' for B in 'TC']
+            kk = AB+['MT','MC']+['bank','rtk','M']
+            B = {k:[] for k in kk}
+            for D in DD:
+                for k in B:
+                    if k in D:
+                        B[k].append(D[k])
+            for k in B:
+                if k in AB+['MT','MC']:
+                    B[k] = torch.cat(B[k])
+                if k in ['bank','rtk','M']:
+                    B[k] = torch.tensor(B[k])
+            return B
+        
         c = Args()
         c.event_encoder = event_encoder
+        c.test = Test2(df, collate, a)
         
         model = Model(a,c)
-        trainer = s.get_trainer(s.a)
+        
+        callbacks = [
+            pl.callbacks.model_checkpoint.ModelCheckpoint(
+                save_weights_only = bool(0),
+                filename = '{R1} {MRR} {P}', 
+                monitor = 'R1', 
+                verbose = False,
+                save_last = bool(1),
+                save_top_k = 1, 
+                mode = 'max', 
+            ),
+        ]
+        trainer = pl.Trainer(
+            accumulate_grad_batches = a.acc_batches,
+#            val_check_interval=a.val_check_interval,
+            check_val_every_n_epoch=a.check_val_every_n_epoch,
+            num_sanity_val_steps = 0,
+            deterministic = bool(0) if s.a.avg_loss=='median' or s.a.avg_pred=='median' else bool(1),
+            benchmark = bool(1),
+            gpus = a.gpus,
+            precision = a.precision,
+            logger = pl.loggers.CSVLogger(
+                str(s.a.log_dir), name=a.exp_name),
+            callbacks = callbacks,
+            max_epochs = a.n_epochs,
+            limit_train_batches = a.fit_limit,
+            limit_val_batches = a.val_limit,
+        )   
+        
+        p = s.a.log_dir
+        p /= s.a.exp_name
+        p /= 'version_0'
+        p /= 'checkpoints'
+        a.ckpt = p/'last.ckpt'
+        print(a.ckpt.stem)
+        BB = trainer.predict(
+            model, c.test, ckpt_path=a.ckpt)  
+        pred = model.predict_epoch_end(BB)
+        print(pred.sample().T)
+        
+        path = a.csv_dir/f'{a.ckpt.stem}.csv'
+        c = 'rtk_list'
+        pred[c] = pred[c]\
+            .apply(lambda x: str(x))\
+            .replace("'", '', regex=True)
+        pred.to_csv(path, index=False)
+
 
 
     print(cl.user_id.unique()),'[000143baebad4467a23b98c918ccda19]'
