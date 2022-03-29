@@ -78,7 +78,8 @@ class Downloader(IO):
             if k==5000 or i==n_groups:
                 s.df = pd.concat(dfs)
                 s.save('df', f'{i}.feather') 
-                save(uids, s.data_dir/f'{i}.json')
+                io.save(
+                    uids, s.data_dir/f'{i}.json')
                 k = 0
                 dfs = []
                 uids = []

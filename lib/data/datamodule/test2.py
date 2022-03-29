@@ -3,22 +3,23 @@
 
 
 from ...base import *
-from ..dataset import DataSet
+from ..dataset2 import DataSet2
 from ..io import IO
 
 
-class Test(pl.LightningDataModule, IO):
-    def __init__(s, P, collate, a):
+class Test2(pl.LightningDataModule, IO):
+    def __init__(s, d, collate, a):
         super().__init__() 
-        s.P = P
+        s.d = d
+        s.P = d.P
         s.collate = collate
         s.a = a
         
         
     def prepare_data(s):
         super().prepare_data()
-        print(f'P: {len(s.P)}')
-        s.ds = {'P': DataSet(s,'P')}
+        print(f'P: {len(s.d.P)}')
+        s.ds = {'P': DataSet2(s.d, s.a)}
            
         
     def predict_dataloader(s):

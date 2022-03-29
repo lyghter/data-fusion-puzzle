@@ -1,1 +1,1 @@
-{"image": "lyghter/gradient:dfc-4", "entry_point": "python -u run.py"}
+{"image": "lyghter/gradient:data-fusion-puzzle", "entry_point": "python -u run.py"}

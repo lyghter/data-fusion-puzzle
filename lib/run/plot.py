@@ -40,7 +40,7 @@ class Plot:
             p /= 'version_0'
             p /= 'metrics.csv'
             try:
-                x = load(p)
+                x = io.load(p)
                 df[a.exp_name] = x[col]
             except:
                 print(f'{s.aa.index(a)+1}/{len(s.aa)} not found')

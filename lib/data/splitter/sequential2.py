@@ -14,7 +14,7 @@ class Sequential2Splitter(IO):
             bank_quantile = 0.9,
             rtk_quantile = 0.9,
         )
-        s.c2l = {'bank': 120, 'rtk' 2256}
+        s.c2l = {'bank': 120, 'rtk': 2256}
      
     
     def run(s,cl,tr):
@@ -43,14 +43,13 @@ class Sequential2Splitter(IO):
         
         df = pd.DataFrame(dd)
         s.pad(df, id_name)
-        s.X = torch.tensor(df['list'].tolist()) 
-        s.Y = torch.tensor(df['uid'].tolist())
-        print(s.X.shape)
-        print(s.Y.shape)
-        uids = set(s.Y.tolist())
+        X = torch.tensor(df['list'].tolist()) 
+        Y = torch.tensor(df['uid'].tolist())
+        print(X.shape)
+        print(Y.shape)
+        uids = set(Y.tolist())
         print(f'{id_name}_uids',len(uids))
-        B = df_name[0].upper() 
-        return s.X,s.Y
+        return X,Y
             
         
     def pad(s, df, id_name):

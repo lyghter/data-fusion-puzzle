@@ -142,7 +142,8 @@ class Estimator(IO):
         callbacks = [
             pl.callbacks.model_checkpoint.ModelCheckpoint(
                 save_weights_only = bool(0),
-                filename = '{R1} {MRR} {P}', 
+#                 filename = '{R1} {MRR} {P}', 
+                filename = '{epoch}', 
                 monitor = 'R1', 
                 verbose = False,
                 save_last = bool(1),

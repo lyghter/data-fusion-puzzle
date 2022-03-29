@@ -174,7 +174,7 @@ class Model(pl.LightningModule):
         p /= 'version_0'
         p /= 'metrics.csv'
         cc = ['loss','R1','MRR','P']
-        df = load(p)[cc].round(4)
+        df = io.load(p)[cc].round(4)
         print(df)
     
 
