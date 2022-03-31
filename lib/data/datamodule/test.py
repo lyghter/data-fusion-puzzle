@@ -3,25 +3,23 @@
 
 
 from ...base import *
-from ..dataset import DataSet
+from ..dataset.test import TestDataset
 from ..io import IO
 
 
 class Test(pl.LightningDataModule, IO):
-    def __init__(s, c):
+    def __init__(s, d, collate, a):
         super().__init__() 
-        s.name = 'TEST'
-        s.c = c
-        s.data_dir = c.a.data_dir
-        s.a = c.a
+        s.d = d
+        s.P = d.P
+        s.collate = collate
+        s.a = a
         
         
     def prepare_data(s):
         super().prepare_data()
-        s.P = s.load(s.name+'.feather').sample(
-            frac=s.a.test_frac, random_state=0)
         print(f'P: {len(s.P)}')
-        s.ds = {'P': DataSet(s,'P')}
+        s.ds = {'P': TestDataset(s.d)}
            
         
     def predict_dataloader(s):

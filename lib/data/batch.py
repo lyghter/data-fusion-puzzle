@@ -29,7 +29,7 @@ class Batch:
         return BM
 
         
-    def average(B, func):
+    def average_TC(B, func):
         XT = []
         XC = []
         for uid in B['bank']:
@@ -48,13 +48,27 @@ class Batch:
         return XT,XC,B['bank']
         
         
+    def average(B, func):
+        XT = []
+        XC = []
+        for uid in B['uids']:
+            if func=='mean':
+                X.append(
+                    B['X'][B['Y']==uid].mean(0))
+            if func=='median':
+                X.append(
+                    B['X'][B['Y']==uid].median(0).values)
+        X = torch.stack(X)
+        return X,B['uids']
+    
+    
     def concat(B):
         X = torch.cat([B['XT'],B['XC']])
         Y = torch.cat([B['YT'],B['YC']])
         return X,Y
         
         
-    def collect(BB):
+    def collect_TC(BB):
         R = dict(
             XT=[], XC=[],
             YT=[], YC=[],
@@ -66,6 +80,29 @@ class Batch:
         for k in R:
             R[k] = torch.cat(R[k])
         return R
-            
+    
+    
+    def collect(BB):
+        R = dict(
+            X=[],
+            Y=[],
+            uids=[], 
+            labels=[], 
+        )
+        for B in BB:
+            for k in R:
+                if k=='labels':
+                    R[k] += B[k]
+                else:
+                    R[k].append(B[k])
+        for k in R:
+            if k=='labels':
+                R[k] = np.array(R[k])
+            else:
+                R[k] = torch.cat(R[k])
+        R['XT'] = R['X'][R['labels']=='bank']
+        R['XC'] = R['X'][R['labels']=='rtk']
+        del R['X']
+        return R            
     
     

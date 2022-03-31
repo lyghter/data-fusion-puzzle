@@ -5,18 +5,13 @@
 from lib.base import *
 from lib.data.splitter.sequential2 import Sequential2Splitter
 from lib.run.args import Args
-from lib.data.datamodule.test2 import Test2
+from lib.data.datamodule.test import Test
 from lib.run.model import Model
+from lib.data.io import IO
 
 
-def main():
-        data_dir, pred_file =sys.argv[1].split('--')[1:]
-        data_dir = Path(data_dir)
-        pred_file = Path(pred_file)
-        print(data_dir) #/data
-        print(pred_file) #/output/predictions.npz
-        print(os.listdir(data_dir)) #['clickstream.csv', 'transactions.csv']
-
+class Preprocessor(IO):
+    def run(s):
         root = Path('json')
         event_encoder = Encoder(root,'event')
         event_encoder.load()
@@ -25,7 +20,11 @@ def main():
         uid = 'user_id'
         ts = 'timestamp'
 
-        cl = pd.read_csv(data_dir/'clickstream.csv')
+        try:
+            cl = pd.read_csv(
+                data_dir/'clickstream.csv')
+        except:
+            cl = pd.read_csv(data_dir/'cl.csv')
         
         print(len(cl))
 #         if len(cl)>1000:
@@ -38,10 +37,13 @@ def main():
         cl[event]=event_encoder.transform(cl[event])
         cl[uid] = uid_encoder.transform(cl[uid])
         
-        
+        try:
+            tr = pd.read_csv(
+                data_dir/'transactions.csv')
+        except:
+            tr = pd.read_csv(
+                data_dir/'tr.csv')     
             
-        tr = pd.read_csv(
-            data_dir/'transactions.csv')
         tr = tr.rename(
             columns={'transaction_dttm': ts})
         tr[ts] = tr[ts].progress_apply(pd.Timestamp)
@@ -60,9 +62,29 @@ def main():
         
         splitter = Sequential2Splitter()
         XC,YC,XT,YT = splitter.run(cl,tr)
+        for name in ['XC','YC','XT','YT']:
+            s.save(name, f'{name}P.pt')
+
+
+def main():
+        data_dir, pred_file =sys.argv[1].split('--')[1:]
+        data_dir = Path(data_dir)
+        pred_file = Path(pred_file)
+        print(data_dir) #/data
+        print(pred_file) #/output/predictions.npz
+        print(os.listdir(data_dir)) #['clickstream.csv', 'transactions.csv']
+        pd.DataFrame([1,2,3]).to_csv('df.csv')
+        1/0
+
+        if Preprocessor
 #       df['bank'] = (bank+[-1]*len(bank))[:max_len]
 #       df['rtk'] = (rtk+[-1]*len(rtk))[:max_len]
-        
+        #         d = Args()
+#         for name in ['XT','YT','XC','YC']:
+#             tensor = s.load(f'{name}P.pt')
+#             setattr(d, name, tensor)
+    
+    
         df['bank'] = (bank+bank)[:max_len]
         df['rtk'] = (rtk+rtk)[:max_len]
         
@@ -121,7 +143,7 @@ def main():
                 for k in B:
                     if k in D:
                         B[k].append(D[k])
-            for k in B:
+            for k in DD[0]:
                 if k in AB+['MT','MC']:
                     B[k] = torch.cat(B[k])
                 if k in ['bank','rtk','M']:
@@ -137,7 +159,7 @@ def main():
         d.XC = XC
         d.YT = YT
         d.YC = YC
-        c.test = Test2(d, collate, a)
+        c.test = Test(d, collate, a)
 
         model = Model(a,c)
         
@@ -188,7 +210,7 @@ def main():
         pred[c] = pred[c].apply(
             lambda x: ([0.0, 0]+x)[:100])
         print(pred.values)
-        1/0
+#         1/0
         np.savez(str(pred_file), pred.values)
 
 

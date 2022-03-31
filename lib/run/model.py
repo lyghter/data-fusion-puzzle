@@ -67,8 +67,8 @@ class Model(pl.LightningModule):
 
 
             
-    def forward(s, B):
-        for k in ['XT','XC']:
+    def forward(s, B, kk):
+        for k in kk:
             X = B[k]
             M = (B[k]!=0).long()             
             X = s.enc(
@@ -92,29 +92,29 @@ class Model(pl.LightningModule):
                             
         
     def training_step(s, B, batch_idx):
-        B = s(B)
+        B = s(B,['XT','XC'])
         loss = s.get_loss(B)
         return loss
 
                     
     def validation_step(s, B, batch_idx):
         bs = s.a.val_batch_size
-        B = s(B)
+        B = s(B,['XT','XC'])
         loss = s.get_loss(B)
         s.log('loss', loss, batch_size=bs)
-        B['XT'],B['XC'],_ = Batch.average(
+        B['XT'],B['XC'],_ = Batch.average_TC(
             B, s.a.avg_pred)
         return B
 
     
     def predict_step(s, B, batch_idx):
-        B = s(B)
-        B['XT'],B['XC'],_ = Batch.average(
+        B = s(B,['X'])
+        B['X'],_ = Batch.average(
             B, s.a.avg_pred)
         return B
     
     
-    def get_rtk_lists(s, R, DF, k=None):
+    def get_lists_TC(s, R, DF, k=None):
         assert 'rtk' in DF
         k = min(s.a.k, len(R['XC']))
         
@@ -127,17 +127,32 @@ class Model(pl.LightningModule):
             l = DF['rtk'].iloc[ids].tolist()
             rtk_lists.append(l)
         return rtk_lists
-       
+
+    
+    def get_lists(s, R, DF, k=None):
+        assert 'rtk' in DF
+        k = min(s.a.k, len(R['XC']))
         
+        IDS = s.distance(R['XT'],R['XC'])\
+            .topk(k, largest=s.largest)\
+            .indices.tolist()
+        
+        rtk_lists = []      
+        for ids in IDS:
+            l = DF['rtk'].iloc[ids].tolist()
+            rtk_lists.append(l)
+        return rtk_lists
+    
+    
     def validation_epoch_end(s, BB):
-        R = Batch.collect(BB)
+        R = Batch.collect_TC(BB)
         val = s.c.train.V.iloc[:len(R['XT'])]
         true = val 
         pred = pd.DataFrame()
         pred['bank'] = val['bank']
         
         k = s.a.k
-        pred['rtk_list'] = s.get_rtk_lists(
+        pred['rtk_list'] = s.get_lists_TC(
             R, val, k
         )
 #         pred = metric.predict_random_100(true)

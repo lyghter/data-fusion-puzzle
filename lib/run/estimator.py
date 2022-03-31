@@ -119,7 +119,8 @@ class Estimator(IO):
         p /= 'version_0'
         p /= 'checkpoints'
         #s.a.ckpt = list(p.iterdir())[0]
-        s.a.ckpt = p/'last.ckpt'
+#         s.a.ckpt = p/'last.ckpt'
+        s.a.ckpt = p/'epoch=11.ckpt'
         print(s.a.ckpt.stem)
         s.test = Test(s)
         BB = s.trainer.predict(
@@ -146,8 +147,8 @@ class Estimator(IO):
                 filename = '{epoch}', 
                 monitor = 'R1', 
                 verbose = False,
-                save_last = bool(1),
-                save_top_k = 1, 
+                save_last = bool(0),
+                save_top_k = -1, 
                 mode = 'max', 
             ),
         ]

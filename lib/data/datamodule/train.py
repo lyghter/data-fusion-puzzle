@@ -3,7 +3,7 @@
 
 
 from ...base import *
-from ..dataset import DataSet
+from ..dataset.train import TrainDataset
 from ..io import IO
 
 
@@ -41,7 +41,7 @@ class Train(pl.LightningDataModule, IO):
          
      
     def build_ds(s):
-        s.ds = {N: DataSet(s, N) for N in 'FV'}
+        s.ds = {N: TrainDataset(s, N) for N in 'FV'}
 
     
     def train_dataloader(s):
