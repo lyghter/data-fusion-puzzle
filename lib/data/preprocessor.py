@@ -1,7 +1,10 @@
 
 
+
+
 from ..base import *
 from .io import IO
+from .splitter.sequential2 import Sequential2Splitter
 
 
 class Preprocessor(IO):
