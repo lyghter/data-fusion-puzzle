@@ -8,64 +8,9 @@ from lib.run.args import Args
 from lib.data.datamodule.test import Test
 from lib.run.model import Model
 from lib.data.io import IO
-
-
-class Preprocessor(IO):
-    def run(s):
-        root = Path('json')
-        event_encoder = Encoder(root,'event')
-        event_encoder.load()
-        uid_encoder = Encoder(root,'uid') 
-        uid_encoder.load()
-        uid = 'user_id'
-        ts = 'timestamp'
-
-        try:
-            cl = pd.read_csv(
-                data_dir/'clickstream.csv')
-        except:
-            cl = pd.read_csv(data_dir/'cl.csv')
-        
-        print(len(cl))
-#         if len(cl)>1000:
-#             1/0   
-        
-        cl[ts] = cl[ts].progress_apply(pd.Timestamp)
-        event = 'cat_id'
-        cl[event] = cl[event].apply(
-            lambda x: f'rtk_{x}')
-        cl[event]=event_encoder.transform(cl[event])
-        cl[uid] = uid_encoder.transform(cl[uid])
-        
-        try:
-            tr = pd.read_csv(
-                data_dir/'transactions.csv')
-        except:
-            tr = pd.read_csv(
-                data_dir/'tr.csv')     
-            
-        tr = tr.rename(
-            columns={'transaction_dttm': ts})
-        tr[ts] = tr[ts].progress_apply(pd.Timestamp)
-        event = 'mcc_code'
-        tr[event] = tr[event].apply(
-            lambda x: f'bank_{x}')
-        tr[event]=event_encoder.transform(tr[event])
-        tr[uid] = uid_encoder.transform(tr[uid]) 
-
-        bank = sorted(
-            tr.user_id.unique().tolist())
-        rtk = sorted(
-            cl.user_id.unique().tolist())   
-        max_len = max(len(bank),len(rtk))
-        df = pd.DataFrame(index=range(max_len))
-        
-        splitter = Sequential2Splitter()
-        XC,YC,XT,YT = splitter.run(cl,tr)
-        for name in ['XC','YC','XT','YT']:
-            s.save(name, f'{name}P.pt')
-
-
+from lib.run.estimator import Estimator
+    
+    
 def main():
         data_dir, pred_file =sys.argv[1].split('--')[1:]
         data_dir = Path(data_dir)
@@ -73,26 +18,8 @@ def main():
         print(data_dir) #/data
         print(pred_file) #/output/predictions.npz
         print(os.listdir(data_dir)) #['clickstream.csv', 'transactions.csv']
-        pd.DataFrame([1,2,3]).to_csv('df.csv')
-        1/0
 
-        if Preprocessor
-#       df['bank'] = (bank+[-1]*len(bank))[:max_len]
-#       df['rtk'] = (rtk+[-1]*len(rtk))[:max_len]
-        #         d = Args()
-#         for name in ['XT','YT','XC','YC']:
-#             tensor = s.load(f'{name}P.pt')
-#             setattr(d, name, tensor)
-    
-    
-        df['bank'] = (bank+bank)[:max_len]
-        df['rtk'] = (rtk+rtk)[:max_len]
         
-        df = df.fillna(-1)
-        
-        del cl, tr
-        gc.collect()
-
         a = Args(
             splitter = 'Sequential',
             splitter_pp = dict(
@@ -135,6 +62,33 @@ def main():
         a.bank_len = XT.shape[1]
         a.rtk_len = XC.shape[1] 
         
+        a.docker = bool(1)
+        e = Estimator(a) 
+        e.predict()
+        
+        
+  
+        
+
+
+
+ 
+        
+#       df['bank'] = (bank+[-1]*len(bank))[:max_len]
+#       df['rtk'] = (rtk+[-1]*len(rtk))[:max_len]
+        #         d = Args()
+
+    
+    
+        df['bank'] = (bank+bank)[:max_len]
+        df['rtk'] = (rtk+rtk)[:max_len]
+        
+        df = df.fillna(-1)
+        
+        del cl, tr
+        gc.collect()
+
+
         def collate(DD):
             AB = [A+B for A in 'XY' for B in 'TC']
             kk = AB+['MT','MC']+['bank','rtk','M']
@@ -153,12 +107,14 @@ def main():
         c = Args()
         c.event_encoder = event_encoder
         c.uid_encoder = uid_encoder
+        
         d = Args()
         d.P = df
         d.XT = XT
         d.XC = XC
         d.YT = YT
         d.YC = YC
+        
         c.test = Test(d, collate, a)
 
         model = Model(a,c)
@@ -234,5 +190,6 @@ def main():
     
 if __name__=='__main__':
     main()
+
 
 

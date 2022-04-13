@@ -6,30 +6,43 @@ from ..data.downloader import Downloader
 from ..data.encoder.event import EventEncoder
 from ..data.encoder.uid import UidEncoder
 from ..data.splitter.sequential import SequentialSplitter
+from ..data.preprocessor import Preprocessor
 from ..data.datamodule.train import Train
 from ..data.datamodule.test import Test
 from .model import Model
 from ..data.io import IO
 
 
-
+def run_or_pass(instance, files):
+    t0 = time.time()
+    if not files.issubset(s.data_files):  
+        instance.run()
+    t1 = time.time()
+    print('-'*20)
+    print(t1-t0)
+    print('-'*20)
+    
+    
 class Estimator(IO):     
     def __init__(s,a):
         s.a = a
         s.data_dir = a.data_dir
         s.data_dir.mkdir(exist_ok=True)
-        s.prepare_data()
+        if a.docker:
+            s.prepare_data_for_matching()
+        else:
+            s.prepare_data_for_puzzle()
         s.load_encoders()
         s.load_tensors()
         s.update_args()
         s.model = Model(a,s)
         s.trainer = s.get_trainer(s.a)
         
-        
-    def prepare_data(s):
+            
+    def prepare_data_for_puzzle(s):
         s.data_files = set(os.listdir(s.data_dir))
-        s.run_or_pass(
-            Downloader, {
+        run_or_pass(
+            Downloader(a), {
             'train_matching.csv',
             'mcc_codes.csv',
             'click_categories.csv',
@@ -38,35 +51,32 @@ class Estimator(IO):
             'sample_submission.csv',
             'transactions.feather',
         })
-        s.run_or_pass(
-            EventEncoder, {
+        run_or_pass(
+            EventEncoder(a), {
             'bank.feather',
             'rtk.feather',
 #             'transactions_events.feather',
 #             'clickstreams_events.feather',
         })
-        s.run_or_pass(
-            UidEncoder, {
+        run_or_pass(
+            UidEncoder(a), {
             'TRAIN.feather',
             'TEST.feather',
 #             'transactions_events_uids.feather',
 #             'clickstreams_events_uids.feather',
         })  
-        s.run_or_pass(
-            eval(s.a.splitter+'Splitter'), {
+        run_or_pass(
+            eval(s.a.splitter+'Splitter')(a), {
             'XC.pt','YC.pt','XT.pt','YT.pt',
         })          
      
         
-    def run_or_pass(s, Class, files):
-        t0 = time.time()
-        if not files.issubset(s.data_files):  
-            Class(s.a).run()
-        t1 = time.time()
-        print('-'*20)
-        print(t1-t0)
-        print('-'*20)
-        
+    def prepare_data_for_matching(s):
+        run_or_pass(
+             Preprocessor(a), {
+            'XCP.pt','YCP.pt','XTP.pt','YTP.pt'
+        })
+
         
     def load_encoders(s):          
         for name in ['event','uid']:
@@ -78,7 +88,8 @@ class Estimator(IO):
     def load_tensors(s):
         s.AB = [A+B for A in 'XY' for B in 'TC']
         for k in s.AB:
-            setattr(s, k, s.load(f'{k}.pt'))
+            path = f'{k}P.pt' if s.a.docker else f'{k}.pt'
+            setattr(s, k, s.load(path))
             
             
     def update_args(s):

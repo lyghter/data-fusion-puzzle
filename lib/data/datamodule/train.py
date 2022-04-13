@@ -9,12 +9,12 @@ from ..io import IO
 
 
 class Train(pl.LightningDataModule, IO):
-    def __init__(s, c):
+    def __init__(s, e):
         super().__init__()
         s.name = 'TRAIN'
-        s.c = c
-        s.data_dir = c.a.data_dir
-        s.a = c.a
+        s.e = e
+        s.data_dir = e.a.data_dir
+        s.a = e.a
 
         
     def prepare_data(s):
@@ -51,7 +51,7 @@ class Train(pl.LightningDataModule, IO):
             batch_size = s.a.fit_batch_size,
             pin_memory = True,
             num_workers = s.a.num_workers,
-            collate_fn = s.c.collate,    
+            collate_fn = s.e.collate,    
             shuffle = True,
             drop_last = True,  
         )  
@@ -64,7 +64,7 @@ class Train(pl.LightningDataModule, IO):
             batch_size = s.a.val_batch_size,
             pin_memory = True,
             num_workers = s.a.num_workers,
-            collate_fn = s.c.collate,    
+            collate_fn = s.e.collate,    
             shuffle = False,
             drop_last = False,  
         )  

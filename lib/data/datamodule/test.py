@@ -8,18 +8,18 @@ from ..io import IO
 
 
 class Test(pl.LightningDataModule, IO):
-    def __init__(s, d, collate, a):
+    def __init__(s, e):
         super().__init__() 
-        s.d = d
-        s.P = d.P
-        s.collate = collate
-        s.a = a
-        
+        s.name = 'TEST'
+        s.e = e
+        s.data_dir = e.a.data_dir
+        s.a = c.a
+
         
     def prepare_data(s):
         super().prepare_data()
         print(f'P: {len(s.P)}')
-        s.ds = {'P': TestDataset(s.d)}
+        s.ds = {'P': TestDataset(s)}
            
         
     def predict_dataloader(s):
@@ -29,7 +29,7 @@ class Test(pl.LightningDataModule, IO):
             batch_size = s.a.val_batch_size,
             pin_memory = True,
             num_workers = s.a.num_workers,
-            collate_fn = s.c.collate,    
+            collate_fn = s.e.collate,    
             shuffle = False,
             drop_last = False,  
         )  

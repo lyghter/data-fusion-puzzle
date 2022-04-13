@@ -5,10 +5,10 @@ from ...base import *
 
 
 class TestDataset(Dataset):
-    def __init__(s, d):
-        s.d = d
-        bank = sorted(set(d.YT.tolist()))
-        rtk = sorted(set(d.YC.tolist()))
+    def __init__(s, dm):
+        s.e = dm.e
+        bank = sorted(set(s.e.YT.tolist()))
+        rtk = sorted(set(s.e.YC.tolist()))
         bank = [[uid,'bank'] for uid in bank]
         rtk = [[uid,'rtk'] for uid in rtk]
         s.labeled_uids = bank+rtk
@@ -19,10 +19,9 @@ class TestDataset(Dataset):
     def __getitem__(s, i): 
         uid, label = s.labeled_uids[i]
         if label=='bank':
-            X = s.d.XT[s.d.YT==uid]
+            X = s.e.XT[s.e.YT==uid]
         if label=='rtk':
-            X = s.d.XC[s.d.YC==uid]
+            X = s.e.XC[s.e.YC==uid]
         return dict(uids=uid, X=X, labels=label)
 
         
-# XT,YT,XC,YC        

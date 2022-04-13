@@ -6,23 +6,23 @@ from ...base import *
 
 class TrainDataset(Dataset):
     def __init__(s, dm, N):
-        s.c = dm.c
+        s.e = dm.e
         s.N = N
         s.df = getattr(dm,s.N)
         
-        bank = set(s.c.YT.tolist())
+        bank = set(s.e.YT.tolist())
         bank_matched = s.df.bank.tolist()
         assert set(bank_matched).issubset(bank)
         bank_unmatched = sorted(
             bank-set(bank_matched))
 
-        rtk = set(s.c.YC.tolist())
+        rtk = set(s.e.YC.tolist())
         rtk_matched = s.df.rtk.tolist()
         assert set(rtk_matched).issubset(rtk)
         rtk_unmatched = sorted(rtk-set(rtk_matched))
         
         s.list = list(zip(bank_matched,rtk_matched))
-        if N=='F' and s.c.a.use_unmatched:
+        if N=='F' and s.e.a.use_unmatched:
             s.list += list(
                 zip(bank_unmatched,rtk_unmatched))
             
@@ -36,8 +36,8 @@ class TrainDataset(Dataset):
         bank = s.list[i][0]
         rtk = s.list[i][1]
         D = {'bank': bank, 'rtk': rtk}
-        XT = s.c.XT[s.c.YT==bank]
-        XC = s.c.XC[s.c.YC==rtk]
+        XT = s.e.XT[s.e.YT==bank]
+        XC = s.e.XC[s.e.YC==rtk]
         YT = torch.ones(len(XT))*bank
         YC = torch.ones(len(XC))*bank ### 
         D['XT'] = XT
