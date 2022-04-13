@@ -83,7 +83,7 @@ class EventEncoder(IO):
         dfs = []
         for p in tqdm(pp):
             dfs.append(
-                pd.read_feather(f'{p}.feather')
+                pd.read_feather(f'{p}.feather'))
             os.remove(f'{p}.feather') ###
             os.remove(f'{p}.json') ###
         return pd.concat(dfs)
