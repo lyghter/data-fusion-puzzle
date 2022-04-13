@@ -33,7 +33,7 @@ class Estimator(IO):
     def prepare_data_for_puzzle(s):
         a = s.a
         s.run_or_pass(
-            Downloader, {
+            'Downloader', {
             'train_matching.csv',
             'mcc_codes.csv',
             'click_categories.csv',
@@ -43,28 +43,28 @@ class Estimator(IO):
             'transactions.feather',
         })
         s.run_or_pass(
-            EventEncoder, {
+            'EventEncoder', {
             'bank.feather',
             'rtk.feather',
 #             'transactions_events.feather',
 #             'clickstreams_events.feather',
         })
         s.run_or_pass(
-            UidEncoder, {
+            'UidEncoder', {
             'TRAIN.feather',
             'TEST.feather',
 #             'transactions_events_uids.feather',
 #             'clickstreams_events_uids.feather',
         })  
         s.run_or_pass(
-            eval(a.splitter+'Splitter'), {
+            a.splitter+'Splitter', {
             'XC.pt','YC.pt','XT.pt','YT.pt',
         })          
      
         
     def prepare_data_for_matching(s):
         s.run_or_pass(
-             Preprocessor, {
+             'Preprocessor', {
             'XCP.pt','YCP.pt','XTP.pt','YTP.pt'
         })
 
