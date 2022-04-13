@@ -6,7 +6,7 @@ from ..data.downloader import Downloader
 from ..data.encoder.event import EventEncoder
 from ..data.encoder.uid import UidEncoder
 from ..data.splitter.sequential import SequentialSplitter
-from ..data.splitter.sequential2 import Sequentia2lSplitter
+from ..data.splitter.sequential2 import Sequential2Splitter
 from ..data.preprocessor import Preprocessor
 from ..data.datamodule.train import Train
 from ..data.datamodule.test import Test
