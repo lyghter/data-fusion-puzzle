@@ -126,6 +126,16 @@ class Estimator(IO):
             s.model, s.train, ckpt_path=s.a.ckpt)
         
         
+    def predict_puzzle(s):
+        s.a.docker = False
+        s.predict()
+
+        
+    def predict_matching(s):
+        s.a.docker = True
+        s.predict()        
+        
+        
     def predict(s):
         p = s.a.log_dir
         p /= s.a.exp_name
