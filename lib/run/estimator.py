@@ -20,10 +20,8 @@ class Estimator(IO):
         s.data_dir = a.data_dir
         s.data_dir.mkdir(exist_ok=True)
         s.data_files = set(os.listdir(s.data_dir))
-        if a.docker:
-            s.prepare_data_for_matching()
-        else:
-            s.prepare_data_for_puzzle()
+        s.prepare_data_for_puzzle()
+        s.prepare_data_for_matching()
         s.load_encoders()
         s.load_tensors()
         s.update_args()
