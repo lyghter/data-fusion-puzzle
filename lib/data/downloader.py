@@ -53,9 +53,14 @@ class Downloader(IO):
         s.tr = s.tr.rename(columns=d)
         s.tr[c] = s.tr[c].progress_apply(
             pd.Timestamp)
+        k = 2930
+        s.tr_3k = s.tr[s.tr.user_id.isin(
+            s.tr.user_id.unique()[:k])]
+        assert s.tr_3k.user_id.nunique()==k
+        s.save('tr_3k','tr.csv')
         s.save('tr','transactions.feather')
         
-        
+
     def download_clickstreams(s): 
         path = '0554f0cf/clickstream.zip'
         gcl = s.download_and_extract_zip(path)
@@ -83,6 +88,13 @@ class Downloader(IO):
                 k = 0
                 dfs = []
                 uids = []
+        
+        k = 2463
+        cl = s.load('5000.feather')
+        s.cl_3k = cl[cl.user_id.isin(
+            cl.user_id.unique()[:k])]
+        assert s.cl_3k.user_id.nunique()==k
+        s.save('cl_3k','cl.csv')
             
                 
     def download_and_extract_zip(s,url):
