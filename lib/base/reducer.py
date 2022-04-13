@@ -46,7 +46,7 @@ class Reducer:
             dtypes = s.get_int_dtypes()
             best_dtype = torch.int64
             for dtype in dtypes:
-                if s.is_ok(df[c], dtype):
+                if s.is_ok(tensor, dtype):
                     best_dtype = dtype
             tensor = tensor.to(best_dtype)
         
