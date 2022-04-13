@@ -42,15 +42,15 @@ class Estimator(IO):
             EventEncoder, {
             'bank.feather',
             'rtk.feather',
-            'transactions_events.feather',
-            'clickstreams_events.feather',
+#             'transactions_events.feather',
+#             'clickstreams_events.feather',
         })
         s.run_or_pass(
             UidEncoder, {
             'TRAIN.feather',
             'TEST.feather',
-            'transactions_events_uids.feather',
-            'clickstreams_events_uids.feather',
+#             'transactions_events_uids.feather',
+#             'clickstreams_events_uids.feather',
         })  
         s.run_or_pass(
             eval(s.a.splitter+'Splitter'), {

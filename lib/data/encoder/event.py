@@ -70,6 +70,7 @@ class EventEncoder(IO):
             lambda x: f'{id_name}_{x}')
         s.df[c] = s.encoder.transform(s.df[c])
         name = f'{df_name}_events.feather'
+        name = f'{df_name}.feather' ###
         s.save('df', name)  
         
         
@@ -82,6 +83,7 @@ class EventEncoder(IO):
         dfs = []
         for p in tqdm(pp):
             dfs.append(pd.read_feather(p))
+            os.remove(p) ###
         return pd.concat(dfs)
     
     

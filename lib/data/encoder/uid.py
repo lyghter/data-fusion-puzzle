@@ -21,6 +21,8 @@ class UidEncoder(IO):
         c = 'user_id'
         tr_name = 'transactions_events.feather'
         cl_name = 'clickstreams_events.feather'
+        tr_name = 'transactions.feather' ###
+        cl_name = 'clickstreams.feather' ###
         s.tr = s.load(tr_name)
         s.cl = s.load(cl_name)
         tr = s.tr[c].unique().tolist()
@@ -30,8 +32,11 @@ class UidEncoder(IO):
         s.encoder.fit(vocab)
         s.tr[c] = s.encoder.transform(s.tr[c])
         s.cl[c] = s.encoder.transform(s.cl[c])
-        s.save('tr',tr_name.replace('.','_uids.'))
-        s.save('cl',cl_name.replace('.','_uids.')) 
+        ###
+#         tr_name = tr_name.replace('.','_uids.')
+#         cl_name = cl_name.replace('.','_uids.')
+        s.save('tr',tr_name)
+        s.save('cl',cl_name) 
         s.encoder.save()
             
         
