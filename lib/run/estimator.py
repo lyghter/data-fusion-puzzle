@@ -40,6 +40,7 @@ class Estimator(IO):
         
             
     def prepare_data_for_puzzle(s):
+        a = s.a
         s.data_files = set(os.listdir(s.data_dir))
         run_or_pass(
             Downloader(a), {
@@ -66,14 +67,14 @@ class Estimator(IO):
 #             'clickstreams_events_uids.feather',
         })  
         run_or_pass(
-            eval(s.a.splitter+'Splitter')(a), {
+            eval(a.splitter+'Splitter')(a), {
             'XC.pt','YC.pt','XT.pt','YT.pt',
         })          
      
         
     def prepare_data_for_matching(s):
         run_or_pass(
-             Preprocessor(a), {
+             Preprocessor(s.a), {
             'XCP.pt','YCP.pt','XTP.pt','YTP.pt'
         })
 
