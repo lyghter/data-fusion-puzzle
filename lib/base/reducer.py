@@ -42,7 +42,8 @@ class Reducer:
         
         
     def transform_tensor(s, tensor):
-        if type(tensor.flatten()[0].item()): 
+        x = tensor.flatten()[0].item()
+        if isinstance(x, int): 
             dtypes = s.get_int_dtypes()
             best_dtype = torch.int64
             for dtype in dtypes:
