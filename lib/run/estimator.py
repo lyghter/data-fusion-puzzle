@@ -19,6 +19,7 @@ class Estimator(IO):
         s.a = a
         s.data_dir = a.data_dir
         s.data_dir.mkdir(exist_ok=True)
+        s.data_files = set(os.listdir(s.data_dir))
         if a.docker:
             s.prepare_data_for_matching()
         else:
@@ -32,7 +33,6 @@ class Estimator(IO):
             
     def prepare_data_for_puzzle(s):
         a = s.a
-        s.data_files = set(os.listdir(s.data_dir))
         s.run_or_pass(
             Downloader, {
             'train_matching.csv',
