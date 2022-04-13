@@ -13,15 +13,6 @@ from .model import Model
 from ..data.io import IO
 
 
-def run_or_pass(instance, files):
-    t0 = time.time()
-    if not files.issubset(s.data_files):  
-        instance.run()
-    t1 = time.time()
-    print('-'*20)
-    print(t1-t0)
-    print('-'*20)
-    
     
 class Estimator(IO):     
     def __init__(s,a):
@@ -42,8 +33,8 @@ class Estimator(IO):
     def prepare_data_for_puzzle(s):
         a = s.a
         s.data_files = set(os.listdir(s.data_dir))
-        run_or_pass(
-            Downloader(a), {
+        s.run_or_pass(
+            Downloader, {
             'train_matching.csv',
             'mcc_codes.csv',
             'click_categories.csv',
@@ -52,32 +43,42 @@ class Estimator(IO):
             'sample_submission.csv',
             'transactions.feather',
         })
-        run_or_pass(
-            EventEncoder(a), {
+        s.run_or_pass(
+            EventEncoder, {
             'bank.feather',
             'rtk.feather',
 #             'transactions_events.feather',
 #             'clickstreams_events.feather',
         })
-        run_or_pass(
-            UidEncoder(a), {
+        s.run_or_pass(
+            UidEncoder, {
             'TRAIN.feather',
             'TEST.feather',
 #             'transactions_events_uids.feather',
 #             'clickstreams_events_uids.feather',
         })  
-        run_or_pass(
-            eval(a.splitter+'Splitter')(a), {
+        s.run_or_pass(
+            eval(a.splitter+'Splitter'), {
             'XC.pt','YC.pt','XT.pt','YT.pt',
         })          
      
         
     def prepare_data_for_matching(s):
-        run_or_pass(
-             Preprocessor(s.a), {
+        s.run_or_pass(
+             Preprocessor, {
             'XCP.pt','YCP.pt','XTP.pt','YTP.pt'
         })
 
+
+    def run_or_pass(s, Class, files):
+        t0 = time.time()
+        if not files.issubset(s.data_files):  
+            Class(s.a).run()
+        t1 = time.time()
+        print('-'*20)
+        print(t1-t0)
+        print('-'*20)
+    
         
     def load_encoders(s):          
         for name in ['event','uid']:
