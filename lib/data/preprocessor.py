@@ -62,7 +62,7 @@ class Preprocessor(IO):
         df = pd.DataFrame(index=range(max_len))
         
         splitter = Sequential2Splitter()
-        XC,YC,XT,YT = splitter.run(cl,tr)
+        s.XC,s.YC,s.XT,s.YT = splitter.run(cl,tr)
         for name in ['XC','YC','XT','YT']:
             s.save(name, f'{name}P.pt')
             

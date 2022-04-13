@@ -69,13 +69,14 @@ class Estimator(IO):
         })
 
 
-    def run_or_pass(s, Class, files):
+    def run_or_pass(s, class_name, files):
+        Class = eval(class_name)
         t0 = time.time()
         if not files.issubset(s.data_files):  
             Class(s.a).run()
         t1 = time.time()
-        print('-'*20)
-        print(round(t1-t0))
+        print(class_name)
+        print(round(t1-t0),'s')
         print('-'*20)
     
         
