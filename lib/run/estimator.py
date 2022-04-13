@@ -75,8 +75,8 @@ class Estimator(IO):
         if not files.issubset(s.data_files):  
             Class(s.a).run()
         t1 = time.time()
-        print(class_name)
-        print(round(t1-t0),'s')
+        dt = round(t1-t0)
+        print(f'{class_name}: {dt} s')
         print('-'*20)
     
         

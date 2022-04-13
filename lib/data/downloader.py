@@ -47,7 +47,7 @@ class Downloader(IO):
     def download_transactions(s):
         s.tr = s.download_and_extract_zip(
             '0433a4ca/transactions.zip')
-        reduce_memory_usage(s.tr)
+        Reducer('DataFrame')(s.tr)
         c = 'timestamp'
         d = {'transaction_dttm':c}
         s.tr = s.tr.rename(columns=d)
@@ -64,7 +64,7 @@ class Downloader(IO):
     def download_clickstreams(s): 
         path = '0554f0cf/clickstream.zip'
         gcl = s.download_and_extract_zip(path)
-        reduce_memory_usage(gcl)
+        Reducer('DataFrame')(gcl)
         gcl = gcl.groupby('user_id')
         uids = list(gcl.groups.keys())
         n_groups = len(uids)

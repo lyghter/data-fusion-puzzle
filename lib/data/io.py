@@ -36,4 +36,9 @@ class IO:
         if ext=='pt':
             x = torch.load(path)
         return x
+    
+    
+    def remove(s, file_name):
+        print('remove', file_name)
+        os.remove(s.data_dir/file_name)        
                

@@ -48,6 +48,7 @@ class UidEncoder(IO):
             df[c] = s.encoder.transform(df[c])
         s.df = df
         s.save('df','TRAIN.feather')
+        s.remove('train_matching.csv')
         
         
     def transform_test(s):
@@ -56,4 +57,7 @@ class UidEncoder(IO):
             df[c] = s.encoder.transform(df[c])
         s.df = df
         s.save('df','TEST.feather')
+        s.remove('puzzle.csv')
 
+
+        

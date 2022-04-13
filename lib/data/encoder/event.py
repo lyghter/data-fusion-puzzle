@@ -79,11 +79,13 @@ class EventEncoder(IO):
         for p in s.data_dir.iterdir():
             if p.suffix=='.json' and p.stem.isdigit():
                 p = str(p).replace('json','feather')
-                pp.append(p) 
+                pp.append(str(p.parent/p.stem)) 
         dfs = []
         for p in tqdm(pp):
-            dfs.append(pd.read_feather(p))
-            os.remove(p) ###
+            dfs.append(
+                pd.read_feather(f'{p}.feather')
+            os.remove(f'{p}.feather') ###
+            os.remove(f'{p}.json') ###
         return pd.concat(dfs)
     
     
