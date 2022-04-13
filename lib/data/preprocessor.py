@@ -10,6 +10,7 @@ from .splitter.sequential2 import Sequential2Splitter
 class Preprocessor(IO):
     def __init__(s, a):
         s.a = a
+        s.data_dir = a.data_dir
         
         
     def run(s):

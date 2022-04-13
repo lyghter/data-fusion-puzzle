@@ -75,7 +75,7 @@ class Estimator(IO):
             Class(s.a).run()
         t1 = time.time()
         print('-'*20)
-        print(t1-t0)
+        print(round(t1-t0))
         print('-'*20)
     
         
