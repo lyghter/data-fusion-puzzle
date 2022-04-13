@@ -16,12 +16,14 @@ class SequentialSplitter(IO):
     
     def run(s):
         s.get_tensors(
-            'clickstreams_events_uids',
+#             'clickstreams_events_uids',
+            'clickstreams',
             'cat_id',
             'rtk'
         )
         s.get_tensors(
-            'transactions_events_uids',
+#             'transactions_events_uids',
+            'transactions',
             'mcc_code',
             'bank'
         )  
