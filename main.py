@@ -62,7 +62,10 @@ def main():
         a.bank_len = XT.shape[1]
         a.rtk_len = XC.shape[1] 
         
+        a.data_dir = data_dir
+        a.pred_file = pred_file
         a.docker = bool(1)
+        
         e = Estimator(a) 
         e.predict()
         

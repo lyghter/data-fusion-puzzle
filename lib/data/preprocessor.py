@@ -5,6 +5,10 @@ from .io import IO
 
 
 class Preprocessor(IO):
+    def __init__(s, a):
+        s.a = a
+        
+        
     def run(s):
         root = Path('json')
         event_encoder = Encoder(root,'event')
@@ -15,10 +19,10 @@ class Preprocessor(IO):
         ts = 'timestamp'
         
         try:
-            cl_path = data_dir/'clickstream.csv'
+            cl_path = s.a.data_dir/'clickstream.csv'
             cl = pd.read_csv(cl_path)
         except:
-            cl_path = data_dir/'cl.csv'
+            cl_path = s.a.data_dir/'cl.csv'
             cl = pd.read_csv(cl_path)
         
         print('len(cl)', len(cl))
@@ -31,10 +35,10 @@ class Preprocessor(IO):
         cl[uid] = uid_encoder.transform(cl[uid])
         
         try:
-            tr_path = data_dir/'transactions.csv'
+            tr_path= s.a.data_dir/'transactions.csv'
             tr = pd.read_csv(tr_path)
         except:
-            tr_path = data_dir/'tr.csv'
+            tr_path = s.a.data_dir/'tr.csv'
             tr = pd.read_csv(tr_path)     
             
         tr = tr.rename(
