@@ -7,10 +7,10 @@ from .base import *
 
 class Reducer:
     def __init__(s, x_type_name):
-        if x_type_name=='DataFrame'
+        if x_type_name=='DataFrame':
             import numpy as np
             s.lib = np
-        if x_type_name=='Tensor'
+        if x_type_name=='Tensor':
             import torch 
             s.lib = torch        
         s.x_type_name = x_type_name
