@@ -8,7 +8,8 @@ from ..io import IO
 
 @all_methods(verbose)
 class EventEncoder(IO):
-    def __init__(s, a):
+    def __init__(s, e):
+        a = e.a
         s.data_dir = a.data_dir
         
         
@@ -75,18 +76,7 @@ class EventEncoder(IO):
         
         
     def load_clickstreams(s):
-        pp = []
-        for p in s.data_dir.iterdir():
-            if p.suffix=='.json' and p.stem.isdigit():
-                p = str(p).replace('json','feather')
-                pp.append(str(p.parent/p.stem)) 
-        dfs = []
-        for p in tqdm(pp):
-            dfs.append(
-                pd.read_feather(f'{p}.feather'))
-            os.remove(f'{p}.feather') ###
-            os.remove(f'{p}.json') ###
-        return pd.concat(dfs)
+        return s.load('clickstreams.feather')
     
     
     def load_transactions(s):

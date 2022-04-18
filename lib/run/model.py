@@ -20,12 +20,12 @@ def mean_pooling(last_hidden_state, attention_mask):
 
 
 class Model(pl.LightningModule):
-    def __init__(s, a, c):
+    def __init__(s, e):
         super().__init__()
-        s.c = c
-        s.a = a
-        vocab_size = len(s.c.event_encoder)
-        
+        s.e = e
+        s.a = e.a
+        a = s.a
+        vocab_size = len(s.e.event_encoder)
         max_len = max(a.bank_len, a.rtk_len)
         n = s.a.bb_pp['block_size']
         mpe = (max_len//n+(max_len%n>0))*n
@@ -67,17 +67,18 @@ class Model(pl.LightningModule):
 
 
             
-    def forward(s, B, kk):
-        for k in kk:
-            X = B[k]
-            M = (B[k]!=0).long()             
-            X = s.enc(
-                input_ids = X,
-                attention_mask = M,
-            )
-            X = X.last_hidden_state 
-            X = mean_pooling(X,M)
-            B[k] = X
+    def forward(s, B):
+        for k in ['XT','XC']:
+            if B[k]!=[]:
+                X = B[k]
+                M = (B[k]!=0).long()   
+                X = s.enc(
+                    input_ids = X,
+                    attention_mask = M,
+                )
+                X = X.last_hidden_state 
+                X = mean_pooling(X,M)
+                B[k] = X
         return B
 
     
@@ -92,25 +93,23 @@ class Model(pl.LightningModule):
                             
         
     def training_step(s, B, batch_idx):
-        B = s(B,['XT','XC'])
+        B = s(B)
         loss = s.get_loss(B)
         return loss
 
                     
     def validation_step(s, B, batch_idx):
         bs = s.a.val_batch_size
-        B = s(B,['XT','XC'])
+        B = s(B)
         loss = s.get_loss(B)
         s.log('loss', loss, batch_size=bs)
-        B['XT'],B['XC'],_ = Batch.average_TC(
-            B, s.a.avg_pred)
+        B = Batch.average_TC(B, s.a.avg_pred)
         return B
 
     
     def predict_step(s, B, batch_idx):
-        B = s(B,['X'])
-        B['X'],_ = Batch.average(
-            B, s.a.avg_pred)
+        B = s(B)
+        B = Batch.average(B, s.a.avg_pred)
         return B
     
     
@@ -130,7 +129,7 @@ class Model(pl.LightningModule):
 
     
     def get_lists(s, R, DF, k=None):
-        assert 'rtk' in DF
+#         assert 'rtk' in DF
         k = min(s.a.k, len(R['XC']))
         
         IDS = s.distance(R['XT'],R['XC'])\
@@ -139,14 +138,15 @@ class Model(pl.LightningModule):
         
         rtk_lists = []      
         for ids in IDS:
-            l = DF['rtk'].iloc[ids].tolist()
+#             l = DF['rtk'].iloc[ids].tolist()
+            l = R['rtk'][ids].tolist()
             rtk_lists.append(l)
         return rtk_lists
     
     
     def validation_epoch_end(s, BB):
         R = Batch.collect_TC(BB)
-        val = s.c.train.V.iloc[:len(R['XT'])]
+        val = s.e.train.V.iloc[:len(R['XT'])]
         true = val 
         pred = pd.DataFrame()
         pred['bank'] = val['bank']
@@ -167,12 +167,16 @@ class Model(pl.LightningModule):
             
     def predict_epoch_end(s, BB):
         R = Batch.collect(BB)
-        test = s.c.test.P
+        
+        test = pd.DataFrame()
+        test['bank'] = R['bank']
+#         test['rtk'] = R['rtk']
+        
         pred = pd.DataFrame()
         pred['bank'] = test['bank']
-        pred['rtk_list'] = s.get_rtk_lists(
+        pred['rtk_list'] = s.get_lists(
             R, test, k=100)
-        func = s.c.uid_encoder.inverse_transform
+        func = s.e.uid_encoder.inverse_transform
         c = 'rtk_list'
         pred[c] = pred[c].apply(func)
 #         if s.a.docker:

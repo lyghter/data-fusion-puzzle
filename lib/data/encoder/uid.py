@@ -7,7 +7,8 @@ from ..io import IO
 
 @all_methods(verbose)
 class UidEncoder(IO):
-    def __init__(s, a):
+    def __init__(s, e):
+        a = e.a
         s.data_dir = a.data_dir
         
         

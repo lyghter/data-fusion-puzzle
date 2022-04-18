@@ -16,12 +16,16 @@ class TestDataset(Dataset):
     def __len__(s):
         return len(s.labeled_uids)     
     
-    def __getitem__(s, i): 
-        uid, label = s.labeled_uids[i]
-        if label=='bank':
-            X = s.e.XT[s.e.YT==uid]
-        if label=='rtk':
-            X = s.e.XC[s.e.YC==uid]
-        return dict(uids=uid, X=X, labels=label)
+    def __getitem__(s, i):
+        kk = ['XT','YT','XC','YC','bank','rtk']
+        D = {k:None for k in kk}
+        D['uid'], D['label'] = s.labeled_uids[i]
+        if D['label']=='bank':
+            D['XT'] = s.e.XT[s.e.YT==D['uid']].int()
+            D['YT'] = s.e.YT[s.e.YT==D['uid']].int()
+        if D['label']=='rtk':
+            D['XC'] = s.e.XC[s.e.YC==D['uid']].int()
+            D['YC'] = s.e.YC[s.e.YC==D['uid']].int()
+        return D
 
         

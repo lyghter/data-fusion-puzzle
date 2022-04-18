@@ -43,23 +43,44 @@ class Batch:
                     B['XT'][B['YT']==uid].median(0).values)
                 XC.append(
                     B['XC'][B['YC']==uid].median(0).values) 
-        XT = torch.stack(XT)
-        XC = torch.stack(XC)
-        return XT,XC,B['bank']
-        
+        B['XT'] = torch.stack(XT)
+        B['XC'] = torch.stack(XC)
+        return B
+
         
     def average(B, func):
         XT = []
         XC = []
-        for uid in B['uids']:
+        B['bank'] = []
+        B['rtk'] = []
+        for uid,label in zip(B['uid'],B['label']):
+            
+            if label=='bank':
+                x,y = 'XT','YT'
+            if label=='rtk':
+                x,y = 'XC','YC' 
+                
+            B[label].append(uid)  
+                
+            f = getattr(B[x][B[y]==uid], func)
+            
             if func=='mean':
-                X.append(
-                    B['X'][B['Y']==uid].mean(0))
+                X = f(0)
             if func=='median':
-                X.append(
-                    B['X'][B['Y']==uid].median(0).values)
-        X = torch.stack(X)
-        return X,B['uids']
+                X = f(0).values
+                
+            if label=='bank':
+                XT.append(X)
+            if label=='rtk':
+                XC.append(X)                
+                
+        if XT!=[]:
+            XT = torch.stack(XT)
+        if XC!=[]:
+            XC = torch.stack(XC)
+        B['XT'] = XT
+        B['XC'] = XC
+        return B
     
     
     def concat(B):
@@ -83,26 +104,25 @@ class Batch:
     
     
     def collect(BB):
-        R = dict(
-            X=[],
-            Y=[],
-            uids=[], 
-            labels=[], 
-        )
+        kk = [
+            'XT','XC','YT','YC',
+            'uid','label','bank','rtk',
+        ]
+        R = {k:[] for k in kk}
+        special_keys=['uid','label']+['bank','rtk']
         for B in BB:
             for k in R:
-                if k=='labels':
+                if k in special_keys:
                     R[k] += B[k]
                 else:
                     R[k].append(B[k])
         for k in R:
-            if k=='labels':
+            if k in special_keys:
                 R[k] = np.array(R[k])
             else:
                 R[k] = torch.cat(R[k])
-        R['XT'] = R['X'][R['labels']=='bank']
-        R['XC'] = R['X'][R['labels']=='rtk']
-        del R['X']
+#         R['XT'] = R['X'][R['label']=='bank']
+#         R['XC'] = R['X'][R['label']=='rtk']
         return R            
     
     

@@ -19,10 +19,11 @@ class Reducer:
     def __call__(s, x):
         if s.x_type_name=='DataFrame':
             assert isinstance(x, pd.DataFrame)
-            s.transform_dataframe(x)         
+            x = s.transform_dataframe(x)         
         if s.x_type_name=='Tensor':
             assert isinstance(x, torch.Tensor)
-            s.transform_tensor(x)     
+            x = s.transform_tensor(x)  
+        return x
         
         
     def transform_dataframe(s, df):
@@ -39,6 +40,7 @@ class Reducer:
             include=[np.float64,np.float32]).columns
         for c in float_cc:
             df[c] = df[c].astype(np.float16)
+        return df
         
         
     def transform_tensor(s, tensor):
@@ -50,6 +52,7 @@ class Reducer:
                 if s.is_ok(tensor, dtype):
                     best_dtype = dtype
             tensor = tensor.to(best_dtype)
+        return tensor
         
         
     def get_int_dtypes(s):

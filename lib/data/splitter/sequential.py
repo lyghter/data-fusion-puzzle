@@ -8,7 +8,8 @@ from ..io import IO
 
 @all_methods(verbose)
 class SequentialSplitter(IO):
-    def __init__(s, a):
+    def __init__(s, e):
+        a = e.a
         s.data_dir = a.data_dir
         s.pp = a.splitter_pp
         s.c2l = {}
@@ -51,10 +52,15 @@ class SequentialSplitter(IO):
         df = pd.DataFrame(dd)
         s.c2l[id_name] = s.get_max_len(df,id_name)
         s.pad(df, id_name)
+        
         s.X = torch.tensor(df['list'].tolist()) 
+        s.X = Reducer('Tensor')(s.X)
+        print(s.X.shape, s.X.dtype)
+        
         s.Y = torch.tensor(df['uid'].tolist())
-        print(s.X.shape)
-        print(s.Y.shape)
+        s.Y = Reducer('Tensor')(s.Y)
+        print(s.Y.shape, s.Y.dtype)
+        
         uids = set(s.Y.tolist())
         print(f'{id_name}_uids',len(uids))
         B = df_name[0].upper() 

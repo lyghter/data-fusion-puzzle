@@ -1,13 +1,15 @@
 
 
 
+
 from ..base import *
 from ..data.downloader import Downloader
 from ..data.encoder.event import EventEncoder
 from ..data.encoder.uid import UidEncoder
 from ..data.splitter.sequential import SequentialSplitter
 from ..data.splitter.sequential2 import Sequential2Splitter
-from ..data.preprocessor import Preprocessor
+from ..data.prepare.preprocessor import Preprocessor
+from ..data.prepare.vectorizer import Vectorizer
 from ..data.datamodule.train import Train
 from ..data.datamodule.test import Test
 from .model import Model
@@ -17,29 +19,71 @@ from ..data.io import IO
     
 class Estimator(IO):     
     def __init__(s,a):
+        s.AB = [A+B for A in 'XY' for B in 'TC']
         s.a = a
         s.data_dir = a.data_dir
         s.data_dir.mkdir(exist_ok=True)
         s.data_files = set(os.listdir(s.data_dir))
-        s.prepare_data_for_puzzle()
-        s.prepare_data_for_matching()
         s.load_encoders()
-        s.load_tensors()
-        s.update_args()
-        s.model = Model(a,s)
         s.trainer = s.get_trainer(s.a)
         
+
+    def run_or_pass(s, class_name, files):
+        Class = eval(class_name)
+        t0 = time.time()
+        if not files.issubset(s.data_files): 
+            Class(s).run()
+        t1 = time.time()
+        dt = round(t1-t0)
+        print(f'{class_name}: {dt} s')
+        print('-'*20)
+    
+        
+    def load_encoders(s):          
+        for name in ['event','uid']:
+            e = Encoder(Path('json'),name)
+            e.load()
+            setattr(s, name+'_encoder', e)    
             
-    def prepare_data_for_puzzle(s):
+                       
+    def update_args(s):
+        s.a.bank_len = s.XT.shape[1]
+        s.a.rtk_len = s.XC.shape[1]  
+        print('bank_len', s.a.bank_len)
+        print('rtk_len', s.a.rtk_len)  
+    
+    
+    def collate(s, DD):
+        B = {k:[] for k in DD[0].keys()}
+        for D in DD:
+            for k in B:
+                if k in D and D[k] is not None:
+                    B[k].append(D[k])
+        for k in B:
+            if k in s.AB+['MT','MC']:
+                try:
+                    B[k] = torch.cat(B[k])
+                except:
+                    pass
+            if k in ['bank','rtk','M','uid']:
+                B[k] = torch.tensor(B[k])
+        return B
+    
+        
+    def fit(s):
         a = s.a
+        if not a.ckpt:
+            shutil.rmtree(
+                a.log_dir/a.exp_name,
+                ignore_errors=True)
         s.run_or_pass(
             'Downloader', {
-            'train_matching.csv',
-            'mcc_codes.csv',
-            'click_categories.csv',
-            'currency_rk.csv',
-            'puzzle.csv',
-            'sample_submission.csv',
+#             'train_matching.csv',
+#             'mcc_codes.csv',
+#             'click_categories.csv',
+#             'currency_rk.csv',
+#             'puzzle.csv',
+#             'sample_submission.csv',
             'transactions.feather',
         })
         s.run_or_pass(
@@ -60,100 +104,68 @@ class Estimator(IO):
             a.splitter+'Splitter', {
             'XC.pt','YC.pt','XT.pt','YT.pt',
         })          
-     
-        
-    def prepare_data_for_matching(s):
-        s.run_or_pass(
-             'Preprocessor', {
-            'XCP.pt','YCP.pt','XTP.pt','YTP.pt'
-        })
-
-
-    def run_or_pass(s, class_name, files):
-        Class = eval(class_name)
-        t0 = time.time()
-        if not files.issubset(s.data_files):  
-            Class(s.a).run()
-        t1 = time.time()
-        dt = round(t1-t0)
-        print(f'{class_name}: {dt} s')
-        print('-'*20)
-    
-        
-    def load_encoders(s):          
-        for name in ['event','uid']:
-            e = Encoder(Path('json'),name)
-            e.load()
-            setattr(s, name+'_encoder', e)    
-            
-            
-    def load_tensors(s):
-        s.AB = [A+B for A in 'XY' for B in 'TC']
         for k in s.AB:
-            path = f'{k}P.pt' if s.a.docker else f'{k}.pt'
-            setattr(s, k, s.load(path))
-            
-            
-    def update_args(s):
-        s.a.bank_len = s.XT.shape[1]
-        s.a.rtk_len = s.XC.shape[1]  
-        print('bank_len', s.a.bank_len)
-        print('rtk_len', s.a.rtk_len)  
-    
-    
-    def collate(s, DD):
-        kk = s.AB+['MT','MC']+['bank','rtk','M']
-        B = {k:[] for k in kk}
-        for D in DD:
-            for k in B:
-                if k in D:
-                    B[k].append(D[k])
-        for k in B:
-            if k in s.AB+['MT','MC']:
-                B[k] = torch.cat(B[k])
-            if k in ['bank','rtk','M']:
-                B[k] = torch.tensor(B[k])
-        return B
-    
-        
-    def fit(s):
-        if not s.a.ckpt:
-            shutil.rmtree(
-                s.a.log_dir/s.a.exp_name,
-                ignore_errors=True)
+            setattr(s, k, s.load(f'{k}.pt'))
+        s.update_args()
+        s.model = Model(s)
         s.train = Train(s)
         s.trainer.fit(
-            s.model, s.train, ckpt_path=s.a.ckpt)
+            s.model, s.train, ckpt_path=a.ckpt)
         
         
-    def predict_puzzle(s):
-        s.a.docker = False
-        s.predict()
+    def predict_puzzle(s, stem_ext):
+        s.run_or_pass(
+            'Preprocessor', {
+                'cl_P.feather',
+                'tr_P.feather',
+        })
+        s.a.cl_path = s.a.data_dir/'cl_P.feather' #clickstream.csv
+        s.a.tr_path = s.a.data_dir/'tr_P.feather' #transactions.csv
+        s.a.L = 'P' 
+        pred = s.predict(stem_ext)
+        print(pred.sample().T)
+        s.save_prediction_csv(pred)        
 
         
-    def predict_matching(s):
-        s.a.docker = True
-        s.predict()        
+    def predict_matching(s, stem_ext):
+        s.a.cl_path = s.a.data_dir/'cl.csv' 
+        s.a.tr_path = s.a.data_dir/'tr.csv' 
+        
+        s.a.cl_path = s.a.data_dir/'clickstream.csv' 
+        s.a.tr_path=s.a.data_dir/'transactions.csv' 
+
+        s.a.L = 'M' 
+        pred = s.predict(stem_ext)
+        print(pred.sample().T)
+        s.save_prediction_npz(pred)
         
         
-    def predict(s):
+    def predict(s, stem_ext):
+        L = s.a.L
+        s.run_or_pass(
+            'Vectorizer', {
+                f'XC{L}.pt',
+                f'YC{L}.pt',
+                f'XT{L}.pt',
+                f'YT{L}.pt'
+        })
+        for k in s.AB:
+            setattr(s, k, s.load(f'{k}{L}.pt'))
+        s.test = Test(s)   
         p = s.a.log_dir
         p /= s.a.exp_name
         p /= 'version_0'
         p /= 'checkpoints'
-        #s.a.ckpt = list(p.iterdir())[0]
-#         s.a.ckpt = p/'last.ckpt'
-        s.a.ckpt = p/'epoch=7.ckpt'
-        print(s.a.ckpt.stem)
-        s.test = Test(s)
+        s.a.ckpt = p/stem_ext
+        s.update_args()
+        s.model = Model(s)
         BB = s.trainer.predict(
             s.model, s.test, ckpt_path=s.a.ckpt)  
         pred = s.model.predict_epoch_end(BB)
-        s.save_prediction(pred)
+        return pred
         
         
-    def save_prediction(s, pred):
-        print(pred.sample().T)
+    def save_prediction_csv(s, pred):
         path = s.a.csv_dir/f'{s.a.ckpt.stem}.csv'
         c = 'rtk_list'
         pred[c] = pred[c]\
@@ -161,7 +173,15 @@ class Estimator(IO):
             .replace("'", '', regex=True)
         pred.to_csv(path, index=False)
         
-    
+        
+    def save_prediction_npz(s, pred):
+        c = 'rtk_list'
+        pred[c] = pred[c].apply(
+            lambda x: ([0.0, 0]+x)[:100])
+        print(pred.values)
+        np.savez(str(s.a.pred_file), pred.values)
+        
+        
     def get_trainer(s,a):
         callbacks = [
             pl.callbacks.model_checkpoint.ModelCheckpoint(

@@ -9,17 +9,11 @@ from lib.data.datamodule.test import Test
 from lib.run.model import Model
 from lib.data.io import IO
 from lib.run.estimator import Estimator
+
+warnings.filterwarnings('ignore')
     
     
 def main():
-        data_dir, pred_file =sys.argv[1].split('--')[1:]
-        data_dir = Path(data_dir)
-        pred_file = Path(pred_file)
-        print(data_dir) #/data
-        print(pred_file) #/output/predictions.npz
-        print(os.listdir(data_dir)) #['clickstream.csv', 'transactions.csv']
-
-        
         a = Args(
             splitter = 'Sequential',
             splitter_pp = dict(
@@ -59,138 +53,26 @@ def main():
             avg_pred = 'mean',
         )
         a.update()
-        a.bank_len = XT.shape[1]
-        a.rtk_len = XC.shape[1] 
         
-        a.data_dir = data_dir
-        a.pred_file = pred_file
+#         a.data_dir, a.pred_file = sys.argv[1].split('--')[1:]
+        
+        a.data_dir, a.pred_file= 'data','pred.npz'   
+        
+        a.data_dir = Path(a.data_dir)
+        a.pred_file = Path(a.pred_file)
+        print(a.data_dir) #/data
+        print(a.pred_file) #/output/predictions.npz
+        print(os.listdir(a.data_dir)) #['clickstream.csv', 'transactions.csv']        
+        
+        
+#         a.bank_len = XT.shape[1]
+#         a.rtk_len = XC.shape[1] 
         a.docker = bool(1)
         
         e = Estimator(a) 
-        e.predict()
+        e.predict_matching('last.ckpt')
         
         
-  
-        
-
-
-
- 
-        
-#       df['bank'] = (bank+[-1]*len(bank))[:max_len]
-#       df['rtk'] = (rtk+[-1]*len(rtk))[:max_len]
-        #         d = Args()
-
-    
-    
-        df['bank'] = (bank+bank)[:max_len]
-        df['rtk'] = (rtk+rtk)[:max_len]
-        
-        df = df.fillna(-1)
-        
-        del cl, tr
-        gc.collect()
-
-
-        def collate(DD):
-            AB = [A+B for A in 'XY' for B in 'TC']
-            kk = AB+['MT','MC']+['bank','rtk','M']
-            B = {k:[] for k in kk}
-            for D in DD:
-                for k in B:
-                    if k in D:
-                        B[k].append(D[k])
-            for k in DD[0]:
-                if k in AB+['MT','MC']:
-                    B[k] = torch.cat(B[k])
-                if k in ['bank','rtk','M']:
-                    B[k] = torch.tensor(B[k])
-            return B
-        
-        c = Args()
-        c.event_encoder = event_encoder
-        c.uid_encoder = uid_encoder
-        
-        d = Args()
-        d.P = df
-        d.XT = XT
-        d.XC = XC
-        d.YT = YT
-        d.YC = YC
-        
-        c.test = Test(d, collate, a)
-
-        model = Model(a,c)
-        
-        callbacks = [
-            pl.callbacks.model_checkpoint.ModelCheckpoint(
-                save_weights_only = bool(0),
-                filename = '{R1} {MRR} {P}', 
-                monitor = 'R1', 
-                verbose = False,
-                save_last = bool(1),
-                save_top_k = 1, 
-                mode = 'max', 
-            ),
-        ]
-        trainer = pl.Trainer(
-            accumulate_grad_batches = a.acc_batches,
-#            val_check_interval=a.val_check_interval,
-            check_val_every_n_epoch=a.check_val_every_n_epoch,
-            num_sanity_val_steps = 0,
-            deterministic = bool(0) if a.avg_loss=='median' or a.avg_pred=='median' else bool(1),
-            benchmark = bool(1),
-            gpus = a.gpus,
-            precision = a.precision,
-            logger = pl.loggers.CSVLogger(
-                str(a.log_dir), name=a.exp_name),
-            callbacks = callbacks,
-            max_epochs = a.n_epochs,
-            limit_train_batches = a.fit_limit,
-            limit_val_batches = a.val_limit,
-        )   
-        
-        p = a.log_dir
-        p /= a.exp_name
-        p /= 'version_0'
-        p /= 'checkpoints'
-        a.ckpt = p/'last.ckpt'
-        print(a.ckpt.stem)
-        BB = trainer.predict(
-            model, c.test, ckpt_path=a.ckpt)  
-        pred = model.predict_epoch_end(BB)
-#         print(pred.sample().T)
-        
-        path = a.csv_dir/f'{a.ckpt.stem}.csv'
-        c = 'rtk_list'
-#         pred[c] = pred[c]\
-#             .apply(lambda x: str(x))\
-#             .replace("'", '', regex=True)
-        pred[c] = pred[c].apply(
-            lambda x: ([0.0, 0]+x)[:100])
-        print(pred.values)
-#         1/0
-        np.savez(str(pred_file), pred.values)
-
-
-
-#     print(cl.user_id.unique()),'[000143baebad4467a23b98c918ccda19]'
-#     print(cl.timestamp.min()),'2021-01-30 20:08:12' 
-    
-#     t0 = time.time()    
-#     tr = pd.read_csv(data_dir/'transactions.csv')
-#     t1 = time.time() 
-#     print(t1-t0), '0.002720355987548828'
-#     print(tr.shape),'(40, 5)'
-#     print(tr.user_id.unique()),['4e2ede603cbd41dc9155ac919818ab6d' '518dccd73b844e18b67a71f2dae925cd']
-#     print(tr.transaction_dttm.min()),'2020-08-01 20:39:00'
-    
-
-
-
-
-
-    
 if __name__=='__main__':
     main()
 

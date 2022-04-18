@@ -7,7 +7,8 @@ from .io import IO
 
 @all_methods(verbose)
 class Downloader(IO):
-    def __init__(s, a):
+    def __init__(s, e):
+        a = e.a
         s.data_dir = a.data_dir
         s.prefix = 'https://storage.yandexcloud.net/datasouls-ods/materials/'
         s.csv_urls = [
@@ -47,56 +48,45 @@ class Downloader(IO):
     def download_transactions(s):
         s.tr = s.download_and_extract_zip(
             '0433a4ca/transactions.zip')
-        Reducer('DataFrame')(s.tr)
+        s.tr = Reducer('DataFrame')(s.tr)
         c = 'timestamp'
         d = {'transaction_dttm':c}
         s.tr = s.tr.rename(columns=d)
         s.tr[c] = s.tr[c].progress_apply(
             pd.Timestamp)
+        
         k = 2930
         s.tr_3k = s.tr[s.tr.user_id.isin(
             s.tr.user_id.unique()[:k])]
         assert s.tr_3k.user_id.nunique()==k
         s.save('tr_3k','tr.csv')
         s.save('tr','transactions.feather')
+        shutil.copyfile(
+            s.data_dir/'transactions.feather',
+            s.data_dir/'_transactions.feather',     
+        )
         
-
+        
     def download_clickstreams(s): 
         path = '0554f0cf/clickstream.zip'
-        gcl = s.download_and_extract_zip(path)
-        Reducer('DataFrame')(gcl)
-        gcl = gcl.groupby('user_id')
-        uids = list(gcl.groups.keys())
-        n_groups = len(uids)
-        
-        k = 0        
-        dfs = []
-        uids = []
-        for i,(uid,df) in enumerate(tqdm(gcl)):
-            i += 1
-            df = df.drop(columns='new_uid')
-            c = 'timestamp'
-            df[c] = df[c].apply(pd.Timestamp)
-            dfs.append(df)
-            uids.append(uid)
-            k += 1
-            if k==5000 or i==n_groups:
-                s.df = pd.concat(dfs)
-                s.save('df', f'{i}.feather') 
-                io.save(
-                    uids, s.data_dir/f'{i}.json')
-                k = 0
-                dfs = []
-                uids = []
-        
+        s.cl = s.download_and_extract_zip(path)
+        s.cl = Reducer('DataFrame')(s.cl)
+        c = 'timestamp'
+        s.cl[c]=s.cl[c].progress_apply(pd.Timestamp)
+  
         k = 2463
-        cl = s.load('5000.feather')
-        s.cl_3k = cl[cl.user_id.isin(
-            cl.user_id.unique()[:k])]
+        s.cl_3k = s.cl[s.cl.user_id.isin(
+            s.cl.user_id.unique()[:k])]
         assert s.cl_3k.user_id.nunique()==k
         s.save('cl_3k','cl.csv')
-            
-                
+        
+        s.save('cl','clickstreams.feather')
+        shutil.copyfile(
+            s.data_dir/'clickstreams.feather',
+            s.data_dir/'_clickstreams.feather',     
+        )      
+        
+              
     def download_and_extract_zip(s,url):
         url = s.prefix + url
         name = url.split('/')[-1].split('.')[0]
@@ -106,7 +96,7 @@ class Downloader(IO):
         download_large_file(url, path_zip)
         file = ZipFile(path_zip).open(name_csv)
         df = pd.read_csv(file)
-        reduce_memory_usage(df)
+        df = Reducer('DataFrame')(df)
         os.remove(path_zip)
         return df            
               
@@ -116,7 +106,7 @@ class Downloader(IO):
             url = s.prefix + s.csv_urls[i]
             path_csv = s.data_dir/url.split('/')[-1]
             df = pd.read_csv(url)
-            reduce_memory_usage(df)
+            df = Reducer('DataFrame')(df)
             df.to_csv(path_csv, index=False)
         
         

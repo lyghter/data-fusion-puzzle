@@ -40,10 +40,10 @@ class TrainDataset(Dataset):
         XC = s.e.XC[s.e.YC==rtk]
         YT = torch.ones(len(XT))*bank
         YC = torch.ones(len(XC))*bank ### 
-        D['XT'] = XT
-        D['YT'] = YT
-        D['XC'] = XC
-        D['YC'] = YC
+        D['XT'] = XT.int()
+        D['YT'] = YT.int()
+        D['XC'] = XC.int()
+        D['YC'] = YC.int()
         D['MT'] = torch.tensor([M]*len(XT))
         D['MC'] = torch.tensor([M]*len(XC))
         D['M'] = M

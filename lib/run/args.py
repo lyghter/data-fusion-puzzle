@@ -27,6 +27,7 @@ class Args:
         a.acc_batches = 1
         a.fit_batch_size = a.batch_size
         a.val_batch_size = a.batch_size
+        a.pred_batch_size = 64*2
  
         
     def get_name(a):
