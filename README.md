@@ -1,4 +1,4 @@
-# [Data Fusion 2022](https://ods.ai/tracks/data-fusion-2022-competitions) 
+# [Data Fusion Contest 2022](https://ods.ai/tracks/data-fusion-2022-competitions) 
 ## Быстрое нейросетевое решение задачи Puzzle
 
 * Результаты на публичном лидерборде
